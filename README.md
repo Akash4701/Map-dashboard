@@ -61,6 +61,7 @@ yarn dev
 ## 📸 Screenshots (Optional)
 
 
+<img width="1919" height="898" alt="image" src="https://github.com/user-attachments/assets/4e736c2f-3802-43e6-961d-faa88e83c5bb" />
 
 
 
