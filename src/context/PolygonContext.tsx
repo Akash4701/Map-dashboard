@@ -1,15 +1,21 @@
 import { createContext, useState } from 'react';
 import type { ReactNode } from 'react';
-
-// Define the shape of a polygon
-export interface Polygon {
+export type Polygon = {
   id: string;
-  points: { lat: number; lng: number }[];
-  dataSource: string;
+  points: [number, number][];
+  dataSource?: string;
   value?: number;
-  color?: string;
   label?: string;
-}
+  color?: string;
+  additionalData?: {
+    totalPoints: number;
+    centerValue?: number;
+    vertexValues?: number[];
+    minValue?: number;
+    maxValue?: number;
+    allValues?: number[];
+  };
+};
 
 // Define the shape of a threshold rule
 export interface ThresholdRule {
@@ -31,6 +37,7 @@ export interface AppState {
   thresholdRules: ThresholdRule[];
   selectedPolygonId?: string;
   timeRange: TimeRange;
+  additionalData?: Object; // Placeholder for any additional data needed
 }
 
 export interface AppContextType extends AppState {

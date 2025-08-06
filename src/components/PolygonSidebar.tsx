@@ -1,7 +1,7 @@
 // PolygonSidebar.tsx
 import { useContext } from 'react';
 import { AppContext } from '../context/PolygonContext';
-import { Delete } from 'lucide-react';
+import { Delete, DeleteIcon } from 'lucide-react';
 
 const PolygonSidebar = () => {
   const { polygons, dataSources, updatePolygon, thresholdRules, setThresholdRules, deletePolygon } = useContext(AppContext)!;
@@ -59,7 +59,7 @@ const PolygonSidebar = () => {
               onClick={() => deletePolygon(polygon.id)}
               className="text-red-500 hover:text-red-700 text-sm"
             >
-              Delete
+              <DeleteIcon/>
             </button>
           </div>
           <div className="mt-2">
@@ -95,6 +95,9 @@ const PolygonSidebar = () => {
           )}
         </div>
       ))}
+      <p className="mt-2 text-base text-gray-800">
+  Include more vertex points to get more accurate results.
+</p>
       
       <div className="mt-6">
         <h3 className="text-lg font-bold mb-3">Threshold Rules</h3>

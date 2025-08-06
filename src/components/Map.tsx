@@ -15,7 +15,6 @@ const ReactMap = () => {
     timeRange 
   } = useContext(AppContext)!;
   
-  
   const fetchingRef = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState<string>('');
@@ -27,9 +26,34 @@ const ReactMap = () => {
       { operator: '<', value: 0, color: '#1e40af' },      // Deep blue for freezing
       { operator: '>=', value: 0, color: '#06b6d4' },     // Cyan for cold
       { operator: '>=', value: 10, color: '#10b981' },    // Green for mild
-        
     ]);
   }, [setThresholdRules]);
+
+  // Get all data points for a polygon (center + vertices)
+  const getDataPointsForPolygon = (polygon: any) => {
+    const dataPoints = [];
+    
+    // Add center point
+    const bounds = L.polygon(polygon.points).getBounds();
+    const center = bounds.getCenter();
+    dataPoints.push({
+      lat: center.lat,
+      lng: center.lng,
+      type: 'center'
+    });
+    
+    // Add vertex points
+    polygon.points.forEach((point: [number, number], index: number) => {
+      dataPoints.push({
+        lat: point[0],
+        lng: point[1],
+        type: 'vertex',
+        index
+      });
+    });
+    
+    return dataPoints;
+  };
 
   const fetchDataForPolygons = async () => {
     if (fetchingRef.current) return;
@@ -39,37 +63,90 @@ const ReactMap = () => {
 
     try {
       const polygonsToUpdate = polygons.filter(p => p.dataSource);
-      const totalPolygons = polygonsToUpdate.length;
+      
+      // Calculate total operations (center + vertices for each polygon)
+      const totalOperations = polygonsToUpdate.reduce((acc, polygon) => {
+        const dataPoints = getDataPointsForPolygon(polygon);
+        return acc + dataPoints.length;
+      }, 0);
 
-      if (totalPolygons === 0) {
+      if (totalOperations === 0) {
         setIsLoading(false);
         fetchingRef.current = false;
         return;
       }
 
-      const updatePromises = polygonsToUpdate.map(async (polygon, index) => {
+      let completedOperations = 0;
+
+      const updatePromises = polygonsToUpdate.map(async (polygon) => {
         try {
-          const center = L.polygon(polygon.points).getBounds().getCenter();
-          console.log('object,center.lat', center.lat, 'center.lng', center.lng);
+          const dataPoints = getDataPointsForPolygon(polygon);
           
-          // Use timeRange from context
-          const value = await fetchTemperature(
-            center.lat, 
-            center.lng, 
-            polygon.dataSource!, 
-            new Date(timeRange.startDate).getTime(), 
-            new Date(timeRange.endDate).getTime()
-          );
+          console.log(`Fetching data for polygon ${polygon.id} from ${dataPoints.length} points (1 center + ${dataPoints.length - 1} vertices)`);
+
+          // Fetch data for all points (center + vertices)
+          const pointPromises = dataPoints.map(async (point) => {
+            try {
+              const value = await fetchTemperature(
+                point.lat,
+                point.lng,
+                polygon.dataSource!,
+                new Date(timeRange.startDate).getTime(),
+                new Date(timeRange.endDate).getTime()
+              );
+              
+              completedOperations++;
+              setFetchProgress((completedOperations / totalOperations) * 100);
+              
+              console.log(`${point.type} point (${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}): ${value}`);
+              
+              return { point, value };
+            } catch (error) {
+              console.error(`Error fetching data for ${point.type} point:`, error);
+              completedOperations++;
+              setFetchProgress((completedOperations / totalOperations) * 100);
+              return { point, value: null };
+            }
+          });
+
+          const results = await Promise.all(pointPromises);
+          const validResults = results.filter(r => r.value !== null);
           
-          if (value !== null) {
+          if (validResults.length > 0) {
+            // Calculate average of all valid points (center + vertices)
+            const values = validResults.map(r => r.value!);
+            const avgValue = values.reduce((sum, val) => sum + val, 0) / values.length;
+            const minValue = Math.min(...values);
+            const maxValue = Math.max(...values);
+            
             const unit = polygon.dataSource === 'temperature_2m' ? '°C' : 
                         polygon.dataSource === 'relativehumidity_2m' ? '%' : '';
-            const label = `${polygon.dataSource!.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}: ${value}${unit}`;
-            updatePolygon({ ...polygon, value, label });
+            
+            const centerResult = validResults.find(r => r.point.type === 'center');
+            const vertexResults = validResults.filter(r => r.point.type === 'vertex');
+            
+            console.log(`Polygon ${polygon.id} results:`);
+            console.log(`- Center: ${centerResult?.value || 'N/A'}`);
+            console.log(`- Vertices: ${vertexResults.map(r => r.value).join(', ')}`);
+            console.log(`- Average: ${avgValue.toFixed(2)}`);
+            
+            const label = `${polygon.dataSource!.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}: ${avgValue.toFixed(1)}${unit} (${validResults.length} points)`;
+            
+            updatePolygon({ 
+              ...polygon, 
+              value: avgValue, 
+              label,
+              additionalData: {
+                totalPoints: validResults.length,
+                centerValue: centerResult?.value,
+                vertexValues: vertexResults.map(r => r.value),
+                minValue,
+                maxValue,
+                allValues: values
+              }
+            });
           }
 
-          // Update progress
-          setFetchProgress(((index + 1) / totalPolygons) * 100);
           return true;
         } catch (error) {
           console.error(`Error fetching data for polygon ${polygon.id}:`, error);
@@ -168,9 +245,31 @@ const ReactMap = () => {
         
         {polygon.value !== undefined && (
           <div className="text-lg font-bold mb-2" style={{ color: polygon.color }}>
-            {polygon.value}
+            {polygon.value.toFixed(1)}
             {polygon.dataSource === 'temperature_2m' ? '°C' : 
              polygon.dataSource === 'relativehumidity_2m' ? '%' : ''}
+          </div>
+        )}
+        
+        {polygon.additionalData && (
+          <div className="text-xs text-gray-600 mb-2 border-t pt-2">
+            <div className="mb-1">
+              <span className="font-medium">Data Points: {polygon.additionalData.totalPoints}</span>
+            </div>
+            
+            {polygon.additionalData.centerValue !== undefined && (
+              <div>Center: {polygon.additionalData.centerValue.toFixed(1)}°C</div>
+            )}
+            
+            {polygon.additionalData.vertexValues && polygon.additionalData.vertexValues.length > 0 && (
+              <div>Vertices: {polygon.additionalData.vertexValues.map((v: number) => v.toFixed(1)).join(', ')}°C</div>
+            )}
+            
+            {polygon.additionalData.totalPoints > 1 && (
+              <div className="mt-1 text-gray-500">
+                Range: {polygon.additionalData.minValue.toFixed(1)} - {polygon.additionalData.maxValue.toFixed(1)}°C
+              </div>
+            )}
           </div>
         )}
         
@@ -189,7 +288,7 @@ const ReactMap = () => {
   };
 
   return (
-    <div className=" h-full overflow-y-auto relative">
+    <div className="h-full overflow-y-auto relative">
       {/* Loading Overlay */}
       {isLoading && (
         <div className="absolute top-4 right-4 z-[1000] bg-white rounded-lg shadow-lg p-4 min-w-64">
@@ -211,6 +310,10 @@ const ReactMap = () => {
           </div>
           
           <div className="text-xs text-gray-500 mt-2">
+            Sampling: Center + Vertices
+          </div>
+          
+          <div className="text-xs text-gray-500">
             Time Range: {timeRange.startDate} to {timeRange.endDate}
           </div>
         </div>
@@ -226,10 +329,9 @@ const ReactMap = () => {
           <div className="text-xs text-green-600 mt-1">
             Last fetch: {lastFetchTime}
           </div>
+          
         </div>
       )}
-
-     
 
       <MapContainer 
         center={[51.505, -0.09]} 
