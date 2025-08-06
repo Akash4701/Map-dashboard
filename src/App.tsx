@@ -16,11 +16,11 @@ function App() {
       </div>
       
       {/* Main content area */}
-      <div className="flex flex-1">
-        <div className="w-3/4">
+      <div className="flex flex-1 w-screen">
+        <div className="w-3/5">
           <LeafletDrawMap />
         </div>
-        <div className="w-1/4">
+        <div className="w-2/5">
           <PolygonSidebar />
         </div>
       </div>

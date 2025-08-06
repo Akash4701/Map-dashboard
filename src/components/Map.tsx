@@ -189,7 +189,7 @@ const ReactMap = () => {
   };
 
   return (
-    <div className="relative h-full">
+    <div className=" h-full overflow-y-auto relative">
       {/* Loading Overlay */}
       {isLoading && (
         <div className="absolute top-4 right-4 z-[1000] bg-white rounded-lg shadow-lg p-4 min-w-64">
@@ -229,30 +229,12 @@ const ReactMap = () => {
         </div>
       )}
 
-      {/* Map Legend */}
-      {thresholdRules.length > 0 && (
-        <div className="absolute bottom-4 left-4 z-[1000] bg-white rounded-lg shadow-lg p-4 max-w-xs">
-          <h4 className="font-semibold text-gray-800 mb-3">Temperature Legend</h4>
-          <div className="space-y-2">
-            {thresholdRules.map((rule, index) => (
-              <div key={index} className="flex items-center text-sm">
-                <div 
-                  className="w-4 h-4 rounded mr-3 border border-gray-300"
-                  style={{ backgroundColor: rule.color }}
-                ></div>
-                <span className="text-gray-700">
-                  {rule.operator} {rule.value}°C
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+     
 
       <MapContainer 
         center={[51.505, -0.09]} 
         zoom={13} 
-        style={{ height: '100vh' }}
+        style={{ minHeight: '100%', width: '100%' }}
         className="z-0"
       >
         <TileLayer

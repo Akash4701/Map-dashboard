@@ -1,6 +1,7 @@
 // PolygonSidebar.tsx
 import { useContext } from 'react';
 import { AppContext } from '../context/PolygonContext';
+import { Delete } from 'lucide-react';
 
 const PolygonSidebar = () => {
   const { polygons, dataSources, updatePolygon, thresholdRules, setThresholdRules, deletePolygon } = useContext(AppContext)!;
@@ -125,7 +126,7 @@ const PolygonSidebar = () => {
               onClick={() => removeThresholdRule(index)}
               className="text-red-500 hover:text-red-700 text-sm px-2"
             >
-              Remove
+              <Delete/>
             </button>
           </div>
         ))}
