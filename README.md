@@ -1,69 +1,75 @@
-# React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# 🌍 Map-based Weather Dashboard
 
-Currently, two official plugins are available:
+A web-based interactive weather dashboard that allows users to draw polygons on a map, select date ranges, and filter temperature data for specific regions using sliders.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## 🚀 Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 🧾 Clone the Repository
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```bash
+git clone https://github.com/Akash4701/Map-dashboard
+cd Map-dashboard/dashboard
+````
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+### 📦 Install Dependencies
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+yarn install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### ▶️ Run the Development Server
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+yarn dev
+```
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## 📚 Libraries & Tools Used
+
+* [react-slider](https://www.npmjs.com/package/react-slider) – To create a smooth and intuitive range slider for selecting temperature.
+* [leaflet](https://leafletjs.com/) – For rendering interactive maps.
+* [react-leaflet](https://react-leaflet.js.org/) – React bindings for Leaflet to simplify integration in React apps.
+* [lucide-react](https://www.npmjs.com/package/lucide-react) – For modern and customizable icon components.
+* open-meteo – Free weather API used to fetch temperature and forecast data based on geographic coordinates.
+
+---
+
+## 🧠 Remarks on Design / Development
+
+* ✅ Modular Architecture
+  The project is cleanly divided into modular components such as `Slider`, `Map`, and `Sidebar` to maintain readability and reusability.
+
+* 🧭 Polygon Selection with Leaflet Draw
+  Users can interactively draw polygons on the map to define the region for which weather data should be fetched. The coordinates are captured and used in API calls.
+
+* 📅 Date to Hour Conversion
+  A utility function calculates the number of hours since the epoch (used by the Open-Meteo API) for both `startDate` and `endDate`, enabling precise weather queries.
+
+* 🌡️ Temperature Range Filtering
+  The slider allows users to filter regions within the selected polygon that fall between the desired temperature range. The filtered areas are visually updated on the map.
+
+* 🌐 Real-time Weather Data
+  Weather data is fetched dynamically using `fetchWeather.ts`, converting geographic and date inputs into API-readable parameters.
+
+* ⚙️ Error Handling
+  API failures, invalid polygon selections, or empty filters are handled gracefully with UI feedback and fallback states.
+
+## 📸 Screenshots (Optional)
+
+
+
+
+
+```
+
+---
+
+Let me know if you want:
+- Screenshots auto-generated with placeholders.
+- Deployment steps (e.g., Vercel, Netlify).
+- Environment variable setup (if you're adding API keys later).
 ```
